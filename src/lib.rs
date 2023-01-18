@@ -1,19 +1,46 @@
-#![feature(strict_provenance)]
-
 extern crate link_cplusplus;
 
 mod bindgen {
-    // include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-    extern "C" {
-        #[doc = " @brief Initializes an NTT object with degree \\p degree and modulus \\p q.\n @param[in] degree also known as N. Size of the NTT transform. Must be a\n power of\n 2\n @param[in] q Prime modulus. Must satisfy \\f$ q == 1 \\mod 2N \\f$\n @param[in] alloc_ptr Custom memory allocator used for intermediate\n calculations\n @brief Performs pre-computation necessary for forward and inverse\n transforms"]
-        #[link_name = "\u{1}_ZN5intel4hexl3NTTC1EmmSt10shared_ptrINS0_13AllocatorBaseEE"]
-        pub fn intel_hexl_NTT_NTT(
-            this: *mut ::std::os::raw::c_void,
-            degree: u64,
-            q: u64,
-            alloc_ptr: *mut ::std::os::raw::c_void,
-        );
-    }
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+    // extern "C" {
+    //     #[doc = " @brief Initializes an NTT object with degree \\p degree and modulus \\p q.\n @param[in] degree also known as N. Size of the NTT transform. Must be a\n power of\n 2\n @param[in] q Prime modulus. Must satisfy \\f$ q == 1 \\mod 2N \\f$\n @param[in] alloc_ptr Custom memory allocator used for intermediate\n calculations\n @brief Performs pre-computation necessary for forward and inverse\n transforms"]
+    //     #[link_name = "\u{1}_ZN5intel4hexl3NTTC1EmmSt10shared_ptrINS0_13AllocatorBaseEE"]
+    //     pub fn intel_hexl_NTT_NTT(
+    //         this: *mut ::std::os::raw::c_void,
+    //         degree: u64,
+    //         q: u64,
+    //         alloc_ptr: *mut ::std::os::raw::c_void,
+    //     );
+    // }
+}
+
+pub fn elem_mul_mod(a: &mut [u64], b: &[u64], q: u64, n: u64, mod_factor: u64) {
+    unsafe {
+        bindgen::intel_hexl_EltwiseMultMod(a.as_mut_ptr(), a.as_ptr(), b.as_ptr(), n, q, mod_factor)
+    };
+}
+
+pub fn elem_add_mod(a: &mut [u64], b: &[u64], q: u64, n: u64) {
+    unsafe { bindgen::intel_hexl_EltwiseAddMod(a.as_mut_ptr(), a.as_ptr(), b.as_ptr(), n, q) };
+}
+
+pub fn elem_reduce_mod(
+    a: &mut [u64],
+    q: u64,
+    n: u64,
+    input_mod_factor: u64,
+    output_mod_factor: u64,
+) {
+    unsafe {
+        bindgen::intel_hexl_EltwiseReduceMod(
+            a.as_mut_ptr(),
+            a.as_ptr(),
+            n,
+            q,
+            input_mod_factor,
+            output_mod_factor,
+        )
+    };
 }
 
 #[cfg(test)]
@@ -27,7 +54,7 @@ mod tests {
         let handler1: *mut c_void = null_mut();
         let handler2: *mut c_void = null_mut();
 
-        unsafe { bindgen::intel_hexl_NTT_NTT(handler1, 8, 1553, null_mut()) };
+        // unsafe { bindgen::intel_hexl_NTT_NTT(handler1, 8, 1553, null_mut()) };
 
         let a = vec![8u64; 8];
         let b = vec![8u64; 8];
