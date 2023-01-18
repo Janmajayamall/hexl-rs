@@ -14,14 +14,44 @@ mod bindgen {
     // }
 }
 
-pub fn elem_mul_mod(a: &mut [u64], b: &[u64], q: u64, n: u64, mod_factor: u64) {
+pub fn elwise_mult_mod(a: &mut [u64], b: &[u64], q: u64, n: u64, input_mod_factor: u64) {
     unsafe {
-        bindgen::intel_hexl_EltwiseMultMod(a.as_mut_ptr(), a.as_ptr(), b.as_ptr(), n, q, mod_factor)
+        bindgen::intel_hexl_EltwiseMultMod(
+            a.as_mut_ptr(),
+            a.as_ptr(),
+            b.as_ptr(),
+            n,
+            q,
+            input_mod_factor,
+        )
     };
 }
 
-pub fn elem_add_mod(a: &mut [u64], b: &[u64], q: u64, n: u64) {
+pub fn elwise_fma_mod(a: &mut [u64], b: u64, c: &[u64], q: u64, n: u64, input_mod_factor: u64) {
+    unsafe {
+        bindgen::intel_hexl_EltwiseFMAMod(
+            a.as_mut_ptr(),
+            c.as_ptr(),
+            b,
+            a.as_ptr(),
+            n,
+            q,
+            input_mod_factor,
+        )
+    };
+}
+
+pub fn elwise_add_mod(a: &mut [u64], b: &[u64], q: u64, n: u64) {
     unsafe { bindgen::intel_hexl_EltwiseAddMod(a.as_mut_ptr(), a.as_ptr(), b.as_ptr(), n, q) };
+}
+pub fn elwise_add_scalar_mod(a: &mut [u64], b: u64, q: u64, n: u64) {
+    unsafe { bindgen::intel_hexl_EltwiseAddMod1(a.as_mut_ptr(), a.as_ptr(), b, n, q) };
+}
+pub fn elwise_sub_mod(a: &mut [u64], b: &[u64], q: u64, n: u64) {
+    unsafe { bindgen::intel_hexl_EltwiseSubMod(a.as_mut_ptr(), a.as_ptr(), b.as_ptr(), n, q) };
+}
+pub fn elwise_sub_scalar_mod(a: &mut [u64], b: u64, q: u64, n: u64) {
+    unsafe { bindgen::intel_hexl_EltwiseSubMod1(a.as_mut_ptr(), a.as_ptr(), b, n, q) };
 }
 
 pub fn elem_reduce_mod(
