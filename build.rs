@@ -21,7 +21,8 @@ fn main() {
         .detect_include_paths(true)
         .header("wrapper.h")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
-        .allowlist_function(".*intel.*")
+        .allowlist_function("NTT_.*")
+        .allowlist_function("Eltwise_.*")
         .generate()
         .unwrap();
     bindings

@@ -1,22 +1,14 @@
+use std::{ffi::c_void, ptr::null_mut};
+
 extern crate link_cplusplus;
 
 mod bindgen {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-    // extern "C" {
-    //     #[doc = " @brief Initializes an NTT object with degree \\p degree and modulus \\p q.\n @param[in] degree also known as N. Size of the NTT transform. Must be a\n power of\n 2\n @param[in] q Prime modulus. Must satisfy \\f$ q == 1 \\mod 2N \\f$\n @param[in] alloc_ptr Custom memory allocator used for intermediate\n calculations\n @brief Performs pre-computation necessary for forward and inverse\n transforms"]
-    //     #[link_name = "\u{1}_ZN5intel4hexl3NTTC1EmmSt10shared_ptrINS0_13AllocatorBaseEE"]
-    //     pub fn intel_hexl_NTT_NTT(
-    //         this: *mut ::std::os::raw::c_void,
-    //         degree: u64,
-    //         q: u64,
-    //         alloc_ptr: *mut ::std::os::raw::c_void,
-    //     );
-    // }
 }
 
 pub fn elwise_mult_mod(a: &mut [u64], b: &[u64], q: u64, n: u64, input_mod_factor: u64) {
     unsafe {
-        bindgen::intel_hexl_EltwiseMultMod(
+        bindgen::Eltwise_MultMod(
             a.as_mut_ptr(),
             a.as_ptr(),
             b.as_ptr(),
@@ -29,7 +21,7 @@ pub fn elwise_mult_mod(a: &mut [u64], b: &[u64], q: u64, n: u64, input_mod_facto
 
 pub fn elwise_fma_mod(a: &mut [u64], b: u64, c: &[u64], q: u64, n: u64, input_mod_factor: u64) {
     unsafe {
-        bindgen::intel_hexl_EltwiseFMAMod(
+        bindgen::Eltwise_FMAMod(
             a.as_mut_ptr(),
             c.as_ptr(),
             b,
@@ -42,16 +34,16 @@ pub fn elwise_fma_mod(a: &mut [u64], b: u64, c: &[u64], q: u64, n: u64, input_mo
 }
 
 pub fn elwise_add_mod(a: &mut [u64], b: &[u64], q: u64, n: u64) {
-    unsafe { bindgen::intel_hexl_EltwiseAddMod(a.as_mut_ptr(), a.as_ptr(), b.as_ptr(), n, q) };
+    unsafe { bindgen::Eltwise_AddMod(a.as_mut_ptr(), a.as_ptr(), b.as_ptr(), n, q) };
 }
 pub fn elwise_add_scalar_mod(a: &mut [u64], b: u64, q: u64, n: u64) {
-    unsafe { bindgen::intel_hexl_EltwiseAddMod1(a.as_mut_ptr(), a.as_ptr(), b, n, q) };
+    unsafe { bindgen::Eltwise_AddScalarMod(a.as_mut_ptr(), a.as_ptr(), b, n, q) };
 }
 pub fn elwise_sub_mod(a: &mut [u64], b: &[u64], q: u64, n: u64) {
-    unsafe { bindgen::intel_hexl_EltwiseSubMod(a.as_mut_ptr(), a.as_ptr(), b.as_ptr(), n, q) };
+    unsafe { bindgen::Eltwise_SubMod(a.as_mut_ptr(), a.as_ptr(), b.as_ptr(), n, q) };
 }
 pub fn elwise_sub_scalar_mod(a: &mut [u64], b: u64, q: u64, n: u64) {
-    unsafe { bindgen::intel_hexl_EltwiseSubMod1(a.as_mut_ptr(), a.as_ptr(), b, n, q) };
+    unsafe { bindgen::Eltwise_SubScalarMod(a.as_mut_ptr(), a.as_ptr(), b, n, q) };
 }
 
 pub fn elem_reduce_mod(
@@ -62,7 +54,7 @@ pub fn elem_reduce_mod(
     output_mod_factor: u64,
 ) {
     unsafe {
-        bindgen::intel_hexl_EltwiseReduceMod(
+        bindgen::Eltwise_ReduceMod(
             a.as_mut_ptr(),
             a.as_ptr(),
             n,
@@ -73,26 +65,65 @@ pub fn elem_reduce_mod(
     };
 }
 
+struct Ntt {
+    handler: *mut c_void,
+}
+
+impl Ntt {
+    pub fn new(degree: u64, q: u64) -> Ntt {
+        let mut handler: *mut c_void = null_mut();
+        unsafe {
+            bindgen::NTT_Create(degree, q, &mut handler);
+        }
+        Ntt { handler }
+    }
+    pub fn forward(&self, a: &mut [u64], input_mod_factor: u64, output_mod_factor: u64) {
+        unsafe {
+            bindgen::NTT_ComputeForward(
+                self.handler,
+                a.as_mut_ptr(),
+                a.as_ptr(),
+                input_mod_factor,
+                output_mod_factor,
+            )
+        }
+    }
+
+    pub fn backward(&self, a: &mut [u64], input_mod_factor: u64, output_mod_factor: u64) {
+        unsafe {
+            bindgen::NTT_ComputeInverse(
+                self.handler,
+                a.as_mut_ptr(),
+                a.as_ptr(),
+                input_mod_factor,
+                output_mod_factor,
+            )
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::distributions::{Distribution, Uniform};
+    use rand::thread_rng;
     use std::ffi::c_void;
     use std::ptr::{null, null_mut};
 
     #[test]
-    fn trial() {
-        let handler1: *mut c_void = null_mut();
-        let handler2: *mut c_void = null_mut();
-
-        // unsafe { bindgen::intel_hexl_NTT_NTT(handler1, 8, 1553, null_mut()) };
-
-        let a = vec![8u64; 8];
-        let b = vec![8u64; 8];
-        let mut c = vec![0u64; 8];
-        // unsafe {
-        //     bindgen::intel_hexl_EltwiseMultMod(c.as_mut_ptr(), a.as_ptr(), b.as_ptr(), 8, 1553, 1);
-        // }
-        dbg!(c);
-        // let res = unsafe { bindgen::intel_hexl_NTT_CheckArguments(1024, 1553) };
+    fn ntt_round_trip() {
+        let degree = 1 << 15;
+        let ntt = Ntt::new(degree, 65537);
+        for _ in 0..1000 {
+            let mut a = Uniform::new(0u64, 65537)
+                .sample_iter(thread_rng())
+                .take(degree as usize)
+                .collect::<Vec<u64>>();
+            let a_clone = a.clone();
+            ntt.forward(&mut a, 1, 1);
+            assert_ne!(a, a_clone);
+            ntt.backward(&mut a, 1, 1);
+            assert_eq!(a, a_clone);
+        }
     }
 }
