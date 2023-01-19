@@ -65,7 +65,8 @@ pub fn elem_reduce_mod(
     };
 }
 
-struct Ntt {
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Ntt {
     handler: *mut c_void,
 }
 
