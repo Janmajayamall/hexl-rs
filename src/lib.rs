@@ -1,4 +1,7 @@
-use std::{ffi::c_void, ptr::null_mut};
+use std::{
+    ffi::c_void,
+    ptr::{null, null_mut},
+};
 
 extern crate link_cplusplus;
 
@@ -12,6 +15,20 @@ pub fn elwise_mult_mod(a: &mut [u64], b: &[u64], q: u64, n: u64, input_mod_facto
             a.as_mut_ptr(),
             a.as_ptr(),
             b.as_ptr(),
+            n,
+            q,
+            input_mod_factor,
+        )
+    };
+}
+
+pub fn elwise_mult_scalar_mod(a: &mut [u64], b: u64, q: u64, n: u64, input_mod_factor: u64) {
+    unsafe {
+        bindgen::Eltwise_FMAMod(
+            a.as_mut_ptr(),
+            a.as_ptr(),
+            b,
+            null(),
             n,
             q,
             input_mod_factor,
@@ -126,5 +143,13 @@ mod tests {
             ntt.backward(&mut a, 1, 1);
             assert_eq!(a, a_clone);
         }
+    }
+
+    #[test]
+    fn mul_fails() {
+        let mut a = [4454464658814738892];
+        let mut b = [13249960090426976534];
+        elwise_mult_mod(&mut a, &b, 4478201243008738947, 1, 1);
+        dbg!(a);
     }
 }
