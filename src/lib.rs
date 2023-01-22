@@ -161,10 +161,11 @@ mod tests {
     fn rayon_ntt() {
         let degree = 1 << 15;
         let ntt = Ntt::new(degree, 65537);
-        let mut vals = (0..10000)
+        let mut vals = (0..5000)
             .map(|_| {
                 (
-                    Ntt::new(degree, 65537),
+                    // Ntt::new(degree, 65537),
+                    ntt.clone(),
                     Uniform::new(0u64, 65537)
                         .sample_iter(thread_rng())
                         .take(degree as usize)
@@ -175,12 +176,12 @@ mod tests {
         let now1 = std::time::SystemTime::now();
         vals.par_iter_mut().for_each(|a| {
             // println!("Launched!!");
-            // let a_clone = a.clone();
+            // let a_clone = a.1.clone();
             // let now = std::time::SystemTime::now();
-            a.0.forward(&mut a.1, 1, 1);
-            // ntt.backward(a, 1, 1);
+            ntt.forward(&mut a.1, 1, 1);
+            // a.0.backward(&mut a.1, 1, 1);
             // println!("It took: {:?}", now.elapsed());
-            // assert_eq!(a_clone, *a);
+            // assert_eq!(a_clone, *a.1);
         });
         println!("Total: {:?}", now1.elapsed());
     }
