@@ -87,6 +87,9 @@ pub struct Ntt {
     handler: *mut c_void,
 }
 
+unsafe impl Send for Ntt {}
+unsafe impl Sync for Ntt {}
+
 impl Ntt {
     pub fn new(degree: u64, q: u64) -> Ntt {
         let mut handler: *mut c_void = null_mut();
@@ -125,6 +128,7 @@ mod tests {
     use super::*;
     use rand::distributions::{Distribution, Uniform};
     use rand::thread_rng;
+    use rayon::prelude::{IntoParallelRefIterator, IntoParallelRefMutIterator, ParallelIterator};
     use std::ffi::c_void;
     use std::ptr::{null, null_mut};
 
@@ -151,5 +155,33 @@ mod tests {
         let mut b = [13249960090426976534];
         elwise_mult_mod(&mut a, &b, 4478201243008738947, 1, 1);
         dbg!(a);
+    }
+
+    #[test]
+    fn rayon_ntt() {
+        let degree = 1 << 15;
+        let ntt = Ntt::new(degree, 65537);
+        let mut vals = (0..10000)
+            .map(|_| {
+                (
+                    Ntt::new(degree, 65537),
+                    Uniform::new(0u64, 65537)
+                        .sample_iter(thread_rng())
+                        .take(degree as usize)
+                        .collect::<Vec<u64>>(),
+                )
+            })
+            .collect::<Vec<(Ntt, Vec<u64>)>>();
+        let now1 = std::time::SystemTime::now();
+        vals.par_iter_mut().for_each(|a| {
+            // println!("Launched!!");
+            // let a_clone = a.clone();
+            // let now = std::time::SystemTime::now();
+            a.0.forward(&mut a.1, 1, 1);
+            // ntt.backward(a, 1, 1);
+            // println!("It took: {:?}", now.elapsed());
+            // assert_eq!(a_clone, *a);
+        });
+        println!("Total: {:?}", now1.elapsed());
     }
 }

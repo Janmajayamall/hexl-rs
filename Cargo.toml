@@ -10,6 +10,7 @@ link-cplusplus="1.0.5"
 
 [dev-dependencies]
 rand = "0.8.5"
+rayon = "1.6.1"
 
 [build-dependencies]
 cmake = "0.1.49"
