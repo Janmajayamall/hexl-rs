@@ -15,6 +15,8 @@ fn random_values(size: usize, max: u64) -> Vec<u64> {
 fn bench_modulus(c: &mut Criterion) {
     let mut group = c.benchmark_group("modulus");
 
+    let batch_size = BatchSize::NumBatches(10000);
+
     for prime in [1152921504606748673u64, 1125899904679937] {
         let logq = 64 - prime.leading_zeros();
         for degree in [1 << 15] {
@@ -27,7 +29,7 @@ fn bench_modulus(c: &mut Criterion) {
                     b.iter_batched(
                         || (a.clone(), a1.clone()),
                         |(mut v, v1)| elwise_mult_mod(&mut v, &v1, prime, degree, 1),
-                        BatchSize::SmallInput,
+                        batch_size,
                     );
                 },
             );
@@ -38,7 +40,7 @@ fn bench_modulus(c: &mut Criterion) {
                     b.iter_batched(
                         || a.clone(),
                         |mut v| elwise_mult_scalar_mod(&mut v, prime - 1, prime, degree, 1),
-                        BatchSize::SmallInput,
+                        batch_size,
                     );
                 },
             );
@@ -49,7 +51,7 @@ fn bench_modulus(c: &mut Criterion) {
                     b.iter_batched(
                         || (a.clone(), a1.clone()),
                         |(mut v, v1)| elwise_fma_mod(&mut v, prime - 1, &v1, prime, degree, 1),
-                        BatchSize::SmallInput,
+                        batch_size,
                     );
                 },
             );

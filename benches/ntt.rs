@@ -14,7 +14,7 @@ fn random_values(size: usize, max: u64) -> Vec<u64> {
 
 fn bench_ntt(c: &mut Criterion) {
     let mut group = c.benchmark_group("ntt");
-
+    let batch_size = BatchSize::NumBatches(10000);
     for prime in [1152921504606748673u64, 1125899904679937] {
         let logq = 64 - prime.leading_zeros();
         for degree in [1 << 15] {
@@ -29,7 +29,7 @@ fn bench_ntt(c: &mut Criterion) {
                         |mut d| {
                             ntt.forward(&mut d, 1, 1);
                         },
-                        BatchSize::SmallInput,
+                        batch_size,
                     );
                 },
             );
@@ -42,7 +42,7 @@ fn bench_ntt(c: &mut Criterion) {
                         |mut d| {
                             ntt.forward(&mut d, 1, 2);
                         },
-                        BatchSize::SmallInput,
+                        batch_size,
                     );
                 },
             );
@@ -55,7 +55,7 @@ fn bench_ntt(c: &mut Criterion) {
                         |mut d| {
                             ntt.backward(&mut d, 1, 1);
                         },
-                        BatchSize::SmallInput,
+                        batch_size,
                     );
                 },
             );
