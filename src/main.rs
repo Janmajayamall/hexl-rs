@@ -3,6 +3,7 @@ use rand::{
     distributions::{Distribution, Uniform},
     thread_rng,
 };
+use traits::Ntt;
 
 fn random_values(size: usize, max: u64) -> Vec<u64> {
     Uniform::new(0u64, max)
@@ -16,11 +17,12 @@ fn main() {
     let prime = 1152921504606748673u64;
     let mut a = random_values(degree, prime);
     let mut a1 = random_values(degree, prime);
-    let ntt = Ntt::new(degree as u64, prime);
-    let now = std::time::SystemTime::now();
+    // let ntt = NttOperator::new(degree, prime);
+    // let now = std::time::SystemTime::now();
     for _ in 0..100000 {
         // elwise_mult_mod(&mut a, &a1, prime, degree as u64, 1);
-        ntt.forward(&mut a, 1, 1);
+        let ntt = NttOperator::new(degree, prime);
+        ntt.forward(&mut a);
     }
-    println!("Time: {:?}", now.elapsed().unwrap() / 100000);
+    // println!("Time: {:?}", now.elapsed().unwrap() / 100000);
 }

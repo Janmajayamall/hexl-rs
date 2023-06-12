@@ -6,10 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 
-
 [dependencies]
 link-cplusplus="1.0.5"
 rand = "0.8.5"
+traits = {git = "https://github.com/Janmajayamall/bfv", branch="ntt-trait"}
 
 [dev-dependencies]
 rayon = "1.6.1"
