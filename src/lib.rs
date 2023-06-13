@@ -117,11 +117,13 @@ impl Ntt for NttOperator {
     }
 }
 
-// impl Drop for NttOperator {
-//     fn drop(&mut self) {
-//         std::mem::drop(self.handler);
-//     }
-// }
+impl Drop for NttOperator {
+    fn drop(&mut self) {
+        unsafe {
+            bindgen::NTT_Destroy(self.handler);
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
