@@ -9,7 +9,7 @@ edition = "2021"
 [dependencies]
 link-cplusplus="1.0.5"
 rand = "0.8.5"
-traits = {git = "https://github.com/Janmajayamall/bfv", branch="ntt-trait"}
+traits = {git = "https://github.com/Janmajayamall/bfv", branch="dev"}
 
 [dev-dependencies]
 rayon = "1.6.1"

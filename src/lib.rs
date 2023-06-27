@@ -24,6 +24,7 @@ pub fn elwise_mult_mod(a: &mut [u64], b: &[u64], q: u64, n: u64, input_mod_facto
     };
 }
 
+/// a = a*b
 pub fn elwise_mult_scalar_mod(a: &mut [u64], b: u64, q: u64, n: u64, input_mod_factor: u64) {
     unsafe {
         bindgen::Eltwise_FMAMod(
@@ -38,6 +39,7 @@ pub fn elwise_mult_scalar_mod(a: &mut [u64], b: u64, q: u64, n: u64, input_mod_f
     };
 }
 
+/// a = a + c*b
 pub fn elwise_fma_mod(a: &mut [u64], b: u64, c: &[u64], q: u64, n: u64, input_mod_factor: u64) {
     unsafe {
         bindgen::Eltwise_FMAMod(
@@ -67,6 +69,14 @@ pub fn elwise_sub_reversed_mod(a: &mut [u64], b: &[u64], q: u64, n: u64) {
 }
 pub fn elwise_sub_scalar_mod(a: &mut [u64], b: u64, q: u64, n: u64) {
     unsafe { bindgen::Eltwise_SubScalarMod(a.as_mut_ptr(), a.as_ptr(), b, n, q) };
+}
+
+pub fn elwise_cmp_add(a: &mut [u64], bound: u64, diff: u64, cmp: u64, n: u64) {
+    unsafe { bindgen::Eltwise_CmpAdd(a.as_mut_ptr(), a.as_ptr(), n, cmp, bound, diff) }
+}
+
+pub fn elwise_cmp_sub_mod(a: &mut [u64], bound: u64, diff: u64, cmp: u64, q: u64, n: u64) {
+    unsafe { bindgen::Eltwise_CmpSubMod(a.as_mut_ptr(), a.as_ptr(), n, q, cmp, bound, diff) }
 }
 
 pub fn elem_reduce_mod(
