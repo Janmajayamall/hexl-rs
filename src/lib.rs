@@ -39,6 +39,27 @@ pub fn elwise_mult_scalar_mod(a: &mut [u64], b: u64, q: u64, n: u64, input_mod_f
     };
 }
 
+pub fn elwise_mult_scalar_mod_2(
+    res: &mut [u64],
+    a: &[u64],
+    b: u64,
+    q: u64,
+    n: u64,
+    input_mod_factor: u64,
+) {
+    unsafe {
+        bindgen::Eltwise_FMAMod(
+            res.as_mut_ptr(),
+            a.as_ptr(),
+            b,
+            null(),
+            n,
+            q,
+            input_mod_factor,
+        )
+    };
+}
+
 /// a = a + c*b
 pub fn elwise_fma_mod(a: &mut [u64], b: u64, c: &[u64], q: u64, n: u64, input_mod_factor: u64) {
     unsafe {
