@@ -1,5 +1,6 @@
 use std::{
     ffi::c_void,
+    mem::MaybeUninit,
     ops::Drop,
     ptr::{null, null_mut},
 };
@@ -24,6 +25,27 @@ pub fn elwise_mult_mod(a: &mut [u64], b: &[u64], q: u64, n: u64, input_mod_facto
     };
 }
 
+pub fn elwise_mult_mod_uinit(
+    r: &mut [MaybeUninit<u64>],
+    a: &[u64],
+    b: &[u64],
+    q: u64,
+    n: u64,
+    input_mod_factor: u64,
+) {
+    let r_ptr = r.as_mut_ptr();
+    unsafe {
+        bindgen::Eltwise_MultMod(
+            r_ptr.cast::<u64>(),
+            a.as_ptr(),
+            b.as_ptr(),
+            n,
+            q,
+            input_mod_factor,
+        )
+    };
+}
+
 /// a = a*b
 pub fn elwise_mult_scalar_mod(a: &mut [u64], b: u64, q: u64, n: u64, input_mod_factor: u64) {
     unsafe {
@@ -39,6 +61,7 @@ pub fn elwise_mult_scalar_mod(a: &mut [u64], b: u64, q: u64, n: u64, input_mod_f
     };
 }
 
+// TODO remove this in favor of elwise_mult_scalar_mod_uinit
 pub fn elwise_mult_scalar_mod_2(
     res: &mut [u64],
     a: &[u64],
@@ -50,6 +73,28 @@ pub fn elwise_mult_scalar_mod_2(
     unsafe {
         bindgen::Eltwise_FMAMod(
             res.as_mut_ptr(),
+            a.as_ptr(),
+            b,
+            null(),
+            n,
+            q,
+            input_mod_factor,
+        )
+    };
+}
+
+pub fn elwise_mult_scalar_mod_uinit(
+    r: &mut [MaybeUninit<u64>],
+    a: &[u64],
+    b: u64,
+    q: u64,
+    n: u64,
+    input_mod_factor: u64,
+) {
+    let r_ptr = r.as_mut_ptr();
+    unsafe {
+        bindgen::Eltwise_FMAMod(
+            r_ptr.cast::<u64>(),
             a.as_ptr(),
             b,
             null(),
@@ -75,15 +120,30 @@ pub fn elwise_fma_mod(a: &mut [u64], b: u64, c: &[u64], q: u64, n: u64, input_mo
     };
 }
 
+// add
 pub fn elwise_add_mod(a: &mut [u64], b: &[u64], q: u64, n: u64) {
     unsafe { bindgen::Eltwise_AddMod(a.as_mut_ptr(), a.as_ptr(), b.as_ptr(), n, q) };
 }
+
+pub fn elwise_add_mod_uinit(r: &mut [MaybeUninit<u64>], a: &[u64], b: &[u64], q: u64, n: u64) {
+    let r_ptr = r.as_mut_ptr();
+    unsafe { bindgen::Eltwise_AddMod(r_ptr.cast::<u64>(), a.as_ptr(), b.as_ptr(), n, q) };
+}
+
 pub fn elwise_add_scalar_mod(a: &mut [u64], b: u64, q: u64, n: u64) {
     unsafe { bindgen::Eltwise_AddScalarMod(a.as_mut_ptr(), a.as_ptr(), b, n, q) };
 }
+
+// sub
 pub fn elwise_sub_mod(a: &mut [u64], b: &[u64], q: u64, n: u64) {
     unsafe { bindgen::Eltwise_SubMod(a.as_mut_ptr(), a.as_ptr(), b.as_ptr(), n, q) };
 }
+
+pub fn elwise_sub_mod_uinit(r: &mut [MaybeUninit<u64>], a: &[u64], b: &[u64], q: u64, n: u64) {
+    let r_ptr = r.as_mut_ptr();
+    unsafe { bindgen::Eltwise_SubMod(r_ptr.cast::<u64>(), a.as_ptr(), b.as_ptr(), n, q) };
+}
+
 /// b - a and stores result in a
 pub fn elwise_sub_reversed_mod(a: &mut [u64], b: &[u64], q: u64, n: u64) {
     unsafe { bindgen::Eltwise_SubMod(a.as_mut_ptr(), b.as_ptr(), a.as_ptr(), n, q) };
@@ -164,6 +224,36 @@ mod tests {
     use rayon::prelude::{IntoParallelRefIterator, IntoParallelRefMutIterator, ParallelIterator};
     use std::ffi::c_void;
     use std::ptr::{null, null_mut};
+
+    const PRIME_60: u64 = 1152921504606748673u64;
+
+    fn random_values(size: usize, max: u64) -> Vec<u64> {
+        Uniform::new(0u64, max)
+            .sample_iter(thread_rng())
+            .take(size)
+            .collect::<Vec<u64>>()
+    }
+
+    #[test]
+    fn uinit_parity() {
+        let size = 1 << 15;
+        let a = random_values(size, PRIME_60);
+        let b = random_values(size, PRIME_60);
+
+        let mut a_clone = a.clone();
+        elwise_mult_mod(&mut a_clone, &b, PRIME_60, size as u64, 1);
+        let mut a_uinit = Vec::<u64>::with_capacity(size);
+        elwise_mult_mod_uinit(
+            a_uinit.spare_capacity_mut(),
+            &a,
+            &b,
+            PRIME_60,
+            size as u64,
+            1,
+        );
+        unsafe { a_uinit.set_len(size) };
+        assert!(a_clone == a_uinit);
+    }
 
     #[test]
     fn ntt_round_trip() {

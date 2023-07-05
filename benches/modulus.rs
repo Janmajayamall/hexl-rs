@@ -20,7 +20,7 @@ fn bench_modulus(c: &mut Criterion) {
 
     for prime in [1152921504606748673u64, 1125899904679937] {
         let logq = 64 - prime.leading_zeros();
-        for degree in [1 << 15] {
+        for degree in [1 << 10] {
             let mut a = random_values(degree, prime);
             let mut a1 = random_values(degree, prime);
 
@@ -55,6 +55,18 @@ fn bench_modulus(c: &mut Criterion) {
                                         1,
                                     );
                                 });
+                            // for i in 0..mod_size {
+                            //     let mut s0 = r0.row_mut(i);
+                            //     let s1 = r1.row(0);
+                            //     elwise_fma_mod(
+                            //         s0.as_slice_mut().unwrap(),
+                            //         prime - 1,
+                            //         s1.as_slice().unwrap(),
+                            //         prime,
+                            //         degree as u64,
+                            //         1,
+                            //     );
+                            // }
                         });
                     },
                 );

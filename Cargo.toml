@@ -10,11 +10,12 @@ edition = "2021"
 link-cplusplus="1.0.5"
 rand = "0.8.5"
 traits = {git = "https://github.com/Janmajayamall/bfv", branch="dev"}
+ndarray = {version = "0.15.6"}
 
 [dev-dependencies]
 rayon = "1.6.1"
 criterion = "0.4"
-ndarray = {version = "0.15.6"}
+
 
 [build-dependencies]
 cmake = "0.1.49"
