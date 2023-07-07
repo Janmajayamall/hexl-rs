@@ -20,7 +20,7 @@ fn bench_modulus(c: &mut Criterion) {
 
     for prime in [1152921504606748673u64, 1125899904679937] {
         let logq = 64 - prime.leading_zeros();
-        for degree in [1 << 10] {
+        for degree in [1 << 15] {
             let mut a = random_values(degree, prime);
             let mut a1 = random_values(degree, prime);
 

@@ -4,8 +4,8 @@ use std::path::PathBuf;
 fn main() {
     let dir = Config::new("hexl")
         .define("CMAKE_BUILD_TYPE", "Release")
-        .define("CMAKE_CXX_FLAGS_RELEASE", "-DNDEBUG -O3")
-        .define("CMAKE_C_FLAGS_RELEASE", "-DNDEBUG -O3")
+        // .define("CMAKE_CXX_FLAGS_RELEASE", "-DNDEBUG -O3")
+        // .define("CMAKE_C_FLAGS_RELEASE", "-DNDEBUG -O3")
         .build();
     let out_path = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
