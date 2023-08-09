@@ -9,7 +9,6 @@ edition = "2021"
 [dependencies]
 link-cplusplus="1.0.5"
 rand = "0.8.5"
-traits = {git = "https://github.com/Janmajayamall/bfv", branch="dev"}
 ndarray = {version = "0.15.6"}
 
 [dev-dependencies]

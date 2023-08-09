@@ -4,7 +4,6 @@ use rand::{
     distributions::{Distribution, Uniform},
     thread_rng,
 };
-use traits::Ntt;
 
 fn random_values(size: usize, max: u64) -> Vec<u64> {
     Uniform::new(0u64, max)

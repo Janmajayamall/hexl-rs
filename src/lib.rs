@@ -4,7 +4,6 @@ use std::{
     ops::Drop,
     ptr::{null, null_mut},
 };
-use traits::Ntt;
 
 extern crate link_cplusplus;
 
@@ -182,29 +181,46 @@ pub fn elem_reduce_mod(
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NttOperator {
     handler: *mut c_void,
+    modulus: u64,
+    ntt_size: usize,
 }
 
 unsafe impl Send for NttOperator {}
 unsafe impl Sync for NttOperator {}
 
-impl Ntt for NttOperator {
-    fn new(degree: usize, q: u64) -> NttOperator {
+impl NttOperator {
+    pub fn new(degree: usize, q: u64) -> NttOperator {
         let mut handler: *mut c_void = null_mut();
         unsafe {
             bindgen::NTT_Create(degree as u64, q, &mut handler);
         }
-        NttOperator { handler }
+        NttOperator {
+            handler,
+            modulus: q,
+            ntt_size: degree,
+        }
     }
-    fn forward(&self, a: &mut [u64]) {
+
+    pub fn forward(&self, a: &mut [u64]) {
         unsafe { bindgen::NTT_ComputeForward(self.handler, a.as_mut_ptr(), a.as_ptr(), 1, 1) }
     }
 
-    fn forward_lazy(&self, a: &mut [u64]) {
+    pub fn forward_lazy(&self, a: &mut [u64]) {
         unsafe { bindgen::NTT_ComputeForward(self.handler, a.as_mut_ptr(), a.as_ptr(), 1, 2) }
     }
 
-    fn backward(&self, a: &mut [u64]) {
+    pub fn backward(&self, a: &mut [u64]) {
         unsafe { bindgen::NTT_ComputeInverse(self.handler, a.as_mut_ptr(), a.as_ptr(), 1, 1) }
+    }
+
+    #[inline]
+    pub fn ntt_size(&self) -> usize {
+        self.ntt_size
+    }
+
+    #[inline]
+    pub fn modulus(&self) -> u64 {
+        self.modulus
     }
 }
 
